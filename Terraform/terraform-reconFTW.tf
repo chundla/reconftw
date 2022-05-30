@@ -1,19 +1,28 @@
-provider "aws" {
-        region = "eu-central-1"
-        access_key = "CHANGEME"
-        secret_key = "CHANGEME"
+#############################################################################
+#############################################################################
+############ WIP to create reconFTW in an IBM Cloud Instance ################
+#############################################################################
+#############################################################################
+
+provider "ibm" {
+        generation = 1
+        region = "us-south-2"
 }
 
-resource "aws_key_pair" "terraform-keys" {
-  key_name = "terraform-keys"
-  public_key = "${file("${path.root}/terraform-keys.pub")}"
+resource ibm_is_vpc "vpc" {
+  name = "reconVPC"
+# public_key = "${file("${path.root}/terraform-keys.pub")}"
 }
 
-resource "aws_instance" "reconFTW_Instance" {
+data ibm_is_image "debian" {
+    name = "ibm-debian-11-2-minimal-amd64-1"
+}
+
+resource "ibm_instance" "reconFTW_Instance" {
     ami = "ami-0f1026b68319bad6c" #debian
     instance_type = "t3.small"
-    key_name = aws_key_pair.terraform-keys.key_name
-    vpc_security_group_ids = ["${aws_security_group.reconFTW_SG.id}"] 
+    key_name = ibm_key_pair.terraform-keys.key_name
+    vpc_security_group_ids = ["${ibm_security_group.reconFTW_SG.id}"] 
     associate_public_ip_address = true
 
     provisioner "remote-exec" {
@@ -31,7 +40,7 @@ resource "aws_instance" "reconFTW_Instance" {
     }
 }
 
-resource "aws_security_group" "reconFTW_SG" {
+resource "ibm_security_group" "reconFTW_SG" {
     name = "Security Group for reconFTW"
 
     ingress {
