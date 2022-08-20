@@ -16,13 +16,14 @@ emailfinder             # Tool
 fake-useragent          # fav-up
 fastapi                 # theHarvester
 future                  # multiple
+google                  # dorks_hunter
 h8mail                  # Tool
 ipwhois                 # fav-up
-jsbeautifier            # Linkfinder
 metafinder              # Tool
 mmh3                    # fav-up
 netaddr                 # dnsvalidator
 orjson                  # theHarvester
+psutil                  # xnLinkFinder
 pyppeteer               # theHarvester
 PySocks                 # pwndb
 PyYAML                  # theHarvester
@@ -33,6 +34,8 @@ s3scanner               # Tool
 setuptools              # theHarvester
 slowapi                 # theHarvester
 starlette               # theHarvester
+termcolor               # xnLinkFinder
+tldextract              # dorks_hunter
 tqdm                    # multiple
 ujson                   # theHarvester
 urllib3                 # multiple

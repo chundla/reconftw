@@ -6,7 +6,7 @@ dir=${tools}
 double_check=false
 
 # ARM Detection
-if [ -s "/proc/cpuinfo" ]; then
+if [ -f "/proc/cpuinfo" ]; then
     if grep -q "Raspberry Pi 3"  /proc/cpuinfo; then
         IS_ARM="True"
         RPI_3="True"
@@ -32,11 +32,13 @@ else
 fi
 
 # Check Bash version
+#(bash --version | awk 'NR==1{print $4}' | cut -d'.' -f1) 2&>/dev/null || echo "Unable to get bash version, for MacOS run 'brew install bash' and rerun installer in a new terminal" && exit 1
+
 BASH_VERSION=$(bash --version | awk 'NR==1{print $4}' | cut -d'.' -f1)
 if [ ${BASH_VERSION} -lt 4 ]; then
      printf "${bred} Your Bash version is lower than 4, please update${reset}\n"
     if [ "True" = "$IS_MAC" ]; then
-        printf "${yellow} For MacOS run 'brew install bash' and rerun installer in a new terminal${reset}\n\n" 
+        printf "${yellow} For MacOS run 'brew install bash' and rerun installer in a new terminal${reset}\n\n"
         exit 1;
     fi
 fi
@@ -70,11 +72,13 @@ gotools["mapcidr"]="go install -v github.com/projectdiscovery/mapcidr/cmd/mapcid
 gotools["ipcdn"]="go install -v github.com/six2dez/ipcdn@latest"
 gotools["dnstake"]="go install -v github.com/pwnesia/dnstake/cmd/dnstake@latest"
 gotools["gowitness"]="go install -v github.com/sensepost/gowitness@latest"
-gotools["cero"]="go install -v github.com/glebarez/cero@latest"
+gotools["tlsx"]="go install github.com/projectdiscovery/tlsx/cmd/tlsx@latest"
 gotools["gitdorks_go"]="go install -v github.com/damit5/gitdorks_go@latest"
+gotools["smap"]="go install -v github.com/s0md3v/smap/cmd/smap@latest"
+gotools["dsieve"]="go install -v github.com/trickest/dsieve@master"
 
 declare -A repos
-repos["degoogle_hunter"]="six2dez/degoogle_hunter"
+repos["dorks_hunter"]="six2dez/dorks_hunter"
 repos["pwndb"]="davidtavarez/pwndb"
 repos["dnsvalidator"]="vortexau/dnsvalidator"
 repos["theHarvester"]="laramies/theHarvester"
@@ -83,7 +87,7 @@ repos["wafw00f"]="EnableSecurity/wafw00f"
 repos["gf"]="tomnomnom/gf"
 repos["Gf-Patterns"]="1ndianl33t/Gf-Patterns"
 repos["ctfr"]="UnaPibaGeek/ctfr"
-repos["LinkFinder"]="dark-warlord14/LinkFinder"
+repos["xnLinkFinder"]="xnl-h4ck3r/xnLinkFinder"
 repos["Corsy"]="s0md3v/Corsy"
 repos["CMSeeK"]="Tuhinshubhra/CMSeeK"
 repos["fav-up"]="pielco11/fav-up"
@@ -118,11 +122,11 @@ install_apt(){
     eval $SUDO apt update -y $DEBUG_STD
     eval $SUDO DEBIAN_FRONTEND="noninteractive" apt install chromium-browser -y $DEBUG_STD
     eval $SUDO DEBIAN_FRONTEND="noninteractive" apt install chromium -y $DEBUG_STD
-    eval $SUDO DEBIAN_FRONTEND="noninteractive" apt install python3 python3-pip build-essential gcc cmake ruby git curl libpcap-dev wget zip python3-dev pv dnsutils libssl-dev libffi-dev libxml2-dev libxslt1-dev zlib1g-dev nmap jq apt-transport-https lynx tor medusa xvfb libxml2-utils procps bsdmainutils libdata-hexdump-perl -y $DEBUG_STD
+    eval $SUDO DEBIAN_FRONTEND="noninteractive" apt install python3 python3-pip build-essential gcc cmake ruby whois git curl libpcap-dev wget zip python3-dev pv dnsutils libssl-dev libffi-dev libxml2-dev libxslt1-dev zlib1g-dev nmap jq apt-transport-https lynx tor medusa xvfb libxml2-utils procps bsdmainutils libdata-hexdump-perl -y $DEBUG_STD
     eval $SUDO systemctl enable tor $DEBUG_STD
-    eval wget https://gitlab.com/api/v4/projects/33695681/packages/generic/nrich/latest/nrich_latest_amd64.deb $DEBUG_STD
-    eval $SUDO dpkg -i nrich_latest_amd64.deb $DEBUG_STD
-    eval $SUDO rm -rf nrich_latest_amd64.deb  $DEBUG_STD
+    rust=$(curl https://sh.rustup.rs -sSf | sh -s -- -y) &>/dev/null
+    eval source $HOME/.cargo/env $DEBUG_STD
+    eval cargo install ripgen $DEBUG_STD
 }
 
 install_brew(){
@@ -133,22 +137,27 @@ install_brew(){
     fi
     eval brew update -$DEBUG_STD
     eval brew install --cask chromium $DEBUG_STD
-    eval brew install bash coreutils python massdns jq gcc cmake ruby git curl libpcap-dev wget zip python3-dev pv dnsutils libssl-dev libffi-dev libxml2-dev libxslt1-dev zlib1g-dev nmap jq apt-transport-https lynx tor medusa xvfb libxml2-utils libdata-hexdump-perl $DEBUG_STD
+    eval brew install bash coreutils python massdns jq gcc cmake ruby git curl libpcap-dev wget zip python3-dev pv dnsutils whois libssl-dev libffi-dev libxml2-dev libxslt1-dev zlib1g-dev nmap jq apt-transport-https lynx tor medusa xvfb libxml2-utils libdata-hexdump-perl $DEBUG_STD
     eval brew services start tor $DEBUG_STD
-    eval wget  https://gitlab.com/api/v4/projects/33695681/packages/generic/nrich/latest/nrich_latest_darwin $DEBUG_STD
-    eval $SUDO sudo installer -pkg nrich_latest_darwin -target / $DEBUG_STD
+    eval brew install rustup $DEBUG_STD
+    eval rustup-init $DEBUG_STD
+    eval cargo install ripgen $DEBUG_STD
 }
 
 install_yum(){
     eval $SUDO yum groupinstall "Development Tools" -y $DEBUG_STD
-    eval $SUDO yum install python3 python3-pip gcc cmake ruby git curl libpcap-dev wget zip python3-devel pv bind-utils libopenssl-devel libffi-devel libxml2-devel libxslt-devel zlib-devel nmap jq lynx tor medusa xorg-x11-server-xvfb -y $DEBUG_STD
-    eval wget https://gitlab.com/api/v4/projects/33695681/packages/generic/nrich/latest/nrich_latest_amd64.rpm $DEBUG_STD
-    eval $SUDO yum localinstall nrich_latest_amd64.rpm -y $DEBUG_STD
+    eval $SUDO yum install python3 python3-pip gcc cmake ruby git curl libpcap-dev wget whois zip python3-devel pv bind-utils libopenssl-devel libffi-devel libxml2-devel libxslt-devel zlib-devel nmap jq lynx tor medusa xorg-x11-server-xvfb -y $DEBUG_STD
+    rust=$(curl https://sh.rustup.rs -sSf | sh -s -- -y) &>/dev/null
+    eval source $HOME/.cargo/env $DEBUG_STD
+    eval cargo install ripgen $DEBUG_STD
 }
 
 install_pacman(){
-    eval $SUDO pacman -Sy install python python-pip base-devel gcc cmake ruby git curl libpcap wget zip pv bind openssl libffi libxml2 libxslt zlib nmap jq lynx tor medusa xorg-server-xvfb -y $DEBUG_STD
+    eval $SUDO pacman -Sy install python python-pip base-devel gcc cmake ruby git curl libpcap whois wget zip pv bind openssl libffi libxml2 libxslt zlib nmap jq lynx tor medusa xorg-server-xvfb -y $DEBUG_STD
     eval $SUDO systemctl enable --now tor.service $DEBUG_STD
+    rust=$(curl https://sh.rustup.rs -sSf | sh -s -- -y) &>/dev/null
+    eval source $HOME/.cargo/env $DEBUG_STD
+    eval cargo install ripgen $DEBUG_STD
 }
 
 eval git config --global --unset http.proxy $DEBUG_STD
@@ -187,36 +196,37 @@ fi
 version=$(curl -L -s https://golang.org/VERSION?m=text)
 #version="go1.17.6"
 printf "${bblue} Running: Installing/Updating Golang ${reset}\n\n"
-if [[ $(eval type go $DEBUG_ERROR | grep -o 'go is') == "go is" ]] && [ "$version" = $(go version | cut -d " " -f3) ]
-    then
-        printf "${bgreen} Golang is already installed and updated ${reset}\n\n"
-    else
-        eval $SUDO rm -rf /usr/local/go $DEBUG_STD
-        if [ "True" = "$IS_ARM" ]; then
-            if [ "True" = "$RPI_3" ]; then
-                eval wget https://dl.google.com/go/${version}.linux-armv6l.tar.gz $DEBUG_STD
-                eval $SUDO tar -C /usr/local -xzf ${version}.linux-armv6l.tar.gz $DEBUG_STD
-            elif [ "True" = "$RPI_4" ]; then
-                eval wget https://dl.google.com/go/${version}.linux-arm64.tar.gz $DEBUG_STD
-                eval $SUDO tar -C /usr/local -xzf ${version}.linux-arm64.tar.gz $DEBUG_STD
-            fi
-        elif [ "True" = "$IS_MAC" ]; then
-            if [ "True" = "$IS_ARM" ]; then
-                eval wget https://dl.google.com/go/${version}.darwin-arm64.tar.gz $DEBUG_STD
-                eval $SUDO tar -C /usr/local -xzf ${version}.darwin-arm64.tar.gz $DEBUG_STD
-            else
-                eval wget https://dl.google.com/go/${version}.darwin-amd64.tar.gz $DEBUG_STD
-                eval $SUDO tar -C /usr/local -xzf ${version}.darwin-amd64.tar.gz $DEBUG_STD
-            fi
+if [ "$install_golang" = "true" ]; then
+    if [[ $(eval type go $DEBUG_ERROR | grep -o 'go is') == "go is" ]] && [[ "$version" = $(go version | cut -d " " -f3) ]]
+        then
+            printf "${bgreen} Golang is already installed and updated ${reset}\n\n"
         else
-            eval wget https://dl.google.com/go/${version}.linux-amd64.tar.gz $DEBUG_STD
-            eval $SUDO tar -C /usr/local -xzf ${version}.linux-amd64.tar.gz $DEBUG_STD
-        fi
-        eval $SUDO ln -sf /usr/local/go/bin/go /usr/local/bin/
-        rm -rf $version*
-        export GOROOT=/usr/local/go
-        export GOPATH=$HOME/go
-        export PATH=$GOPATH/bin:$GOROOT/bin:$HOME/.local/bin:$PATH
+            eval $SUDO rm -rf /usr/local/go $DEBUG_STD
+            if [ "True" = "$IS_ARM" ]; then
+                if [ "True" = "$RPI_3" ]; then
+                    eval wget https://dl.google.com/go/${version}.linux-armv6l.tar.gz $DEBUG_STD
+                    eval $SUDO tar -C /usr/local -xzf ${version}.linux-armv6l.tar.gz $DEBUG_STD
+                elif [ "True" = "$RPI_4" ]; then
+                    eval wget https://dl.google.com/go/${version}.linux-arm64.tar.gz $DEBUG_STD
+                    eval $SUDO tar -C /usr/local -xzf ${version}.linux-arm64.tar.gz $DEBUG_STD
+                fi
+            elif [ "True" = "$IS_MAC" ]; then
+                if [ "True" = "$IS_ARM" ]; then
+                    eval wget https://dl.google.com/go/${version}.darwin-arm64.tar.gz $DEBUG_STD
+                    eval $SUDO tar -C /usr/local -xzf ${version}.darwin-arm64.tar.gz $DEBUG_STD
+                else
+                    eval wget https://dl.google.com/go/${version}.darwin-amd64.tar.gz $DEBUG_STD
+                    eval $SUDO tar -C /usr/local -xzf ${version}.darwin-amd64.tar.gz $DEBUG_STD
+                fi
+            else
+                eval wget https://dl.google.com/go/${version}.linux-amd64.tar.gz $DEBUG_STD
+                eval $SUDO tar -C /usr/local -xzf ${version}.linux-amd64.tar.gz $DEBUG_STD
+            fi
+            eval $SUDO ln -sf /usr/local/go/bin/go /usr/local/bin/
+            #rm -rf $version*
+            export GOROOT=/usr/local/go
+            export GOPATH=$HOME/go
+            export PATH=$GOPATH/bin:$GOROOT/bin:$HOME/.local/bin:$PATH
 cat << EOF >> ~/${profile_shell}
 
 # Golang vars
@@ -224,7 +234,9 @@ export GOROOT=/usr/local/go
 export GOPATH=\$HOME/go
 export PATH=\$GOPATH/bin:\$GOROOT/bin:\$HOME/.local/bin:\$PATH
 EOF
-
+fi
+else
+    printf "${byellow} Golang will not be configured according to the user's prefereneces (reconftw.cfg install_golang var)${reset}\n";
 fi
 
 [ -n "$GOPATH" ] || { printf "${bred} GOPATH env var not detected, add Golang env vars to your \$HOME/.bashrc or \$HOME/.zshrc:\n\n export GOROOT=/usr/local/go\n export GOPATH=\$HOME/go\n export PATH=\$GOPATH/bin:\$GOROOT/bin:\$PATH\n\n"; exit 1; }
@@ -265,8 +277,8 @@ printf "${bblue}\n Running: Installing repositories (${#repos[@]})${reset}\n\n"
 # Repos with special configs
 eval git clone https://github.com/projectdiscovery/nuclei-templates ~/nuclei-templates $DEBUG_STD
 eval git clone https://github.com/geeknik/the-nuclei-templates.git ~/nuclei-templates/extra_templates $DEBUG_STD
-eval wget -nc -O ~/nuclei-templates/ssrf_nagli.yaml https://raw.githubusercontent.com/NagliNagli/BountyTricks/main/ssrf.yaml $DEBUG_STD
-eval wget -nc -O ~/nuclei-templates/sap-redirect_nagli.yaml https://raw.githubusercontent.com/NagliNagli/BountyTricks/main/sap-redirect.yaml $DEBUG_STD
+eval wget -q -O - https://raw.githubusercontent.com/NagliNagli/BountyTricks/main/ssrf.yaml > ~/nuclei-templates/ssrf_nagli.yaml $DEBUG_STD
+eval wget -q -O - https://raw.githubusercontent.com/NagliNagli/BountyTricks/main/sap-redirect.yaml > ~/nuclei-templates/sap-redirect_nagli.yaml $DEBUG_STD
 eval nuclei -update-templates $DEBUG_STD
 cd ~/nuclei-templates/extra_templates && eval git pull $DEBUG_STD
 cd "$dir" || { echo "Failed to cd to $dir in ${FUNCNAME[0]} @ line ${LINENO}"; exit 1; }
@@ -290,13 +302,13 @@ for repo in "${!repos[@]}"; do
         printf "${red} Unable to install $repo, try manually (${repos_step}/${#repos[@]})${reset}\n"
         double_check=true
     fi
-    if [ -s "setup.py" ]; then
-        eval $SUDO pip3 install . $DEBUG_STD
-    fi
     if [ -s "requirements.txt" ]; then
-        #eval $SUDO pip3 install -r requirements.txt $DEBUG_STD
-        eval $SUDO python3 setup.py install --record files.txt $DEBUG_STD
-        [ -s "files.txt" ] && eval xargs rm -rf < files.txt $DEBUG_STD
+        eval $SUDO pip3 install -r requirements.txt $DEBUG_STD
+        #eval $SUDO python3 setup.py install --record files.txt $DEBUG_STD
+        #[ -s "files.txt" ] && eval xargs rm -rf < files.txt $DEBUG_STD
+        #eval $SUDO pip3 install . $DEBUG_STD
+    fi
+    if [ -s "setup.py" ]; then
         eval $SUDO pip3 install . $DEBUG_STD
     fi
     if [ "massdns" = "$repo" ]; then
@@ -324,11 +336,19 @@ if [ "True" = "$IS_ARM" ]; then
         eval $SUDO mv unimap-aarch64 /usr/local/bin/unimap
     fi
 elif [ "True" = "$IS_MAC" ]; then
-    eval wget -N -c https://github.com/Edu4rdSHL/unimap/releases/latest/download/unimap-osx $DEBUG_STD
-    eval wget -N -c https://github.com/dwisiswant0/ppfuzz/releases/download/v1.0.1/ppfuzz-v1.0.1-x86_64-apple-darwin.tar.gz $DEBUG_STD
-    eval $SUDO tar -C /usr/local/bin/ -xzf ppfuzz-v1.0.1-x86_64-apple-darwin.tar.gz  $DEBUG_STD
-    eval $SUDO rm -rf ppfuzz-v1.0.1-x86_64-apple-darwin.tar.gz  $DEBUG_STD
-    eval $SUDO mv unimap-osx /usr/local/bin/unimap
+    if [ "True" = "$IS_ARM" ]; then
+        eval wget -N -c https://github.com/Edu4rdSHL/unimap/releases/latest/download/unimap-armv7 $DEBUG_STD
+        eval wget -N -c https://github.com/dwisiswant0/ppfuzz/releases/download/v1.0.1/ppfuzz-v1.0.1-armv7-unknown-linux-gnueabihf.tar.gz $DEBUG_STD
+        eval $SUDO tar -C /usr/local/bin/ -xzf ppfuzz-v1.0.1-armv7-unknown-linux-gnueabihf.tar.gz  $DEBUG_STD
+        eval $SUDO rm -rf ppfuzz-v1.0.1-armv7-unknown-linux-gnueabihf.tar.gz  $DEBUG_STD
+        eval $SUDO mv unimap-armv7 /usr/local/bin/unimap
+    else
+        eval wget -N -c https://github.com/Edu4rdSHL/unimap/releases/latest/download/unimap-osx $DEBUG_STD
+        eval wget -N -c https://github.com/dwisiswant0/ppfuzz/releases/download/v1.0.1/ppfuzz-v1.0.1-x86_64-apple-darwin.tar.gz $DEBUG_STD
+        eval $SUDO tar -C /usr/local/bin/ -xzf ppfuzz-v1.0.1-x86_64-apple-darwin.tar.gz  $DEBUG_STD
+        eval $SUDO rm -rf ppfuzz-v1.0.1-x86_64-apple-darwin.tar.gz  $DEBUG_STD
+        eval $SUDO mv unimap-osx /usr/local/bin/unimap
+    fi
 else
     eval wget -N -c https://github.com/Edu4rdSHL/unimap/releases/download/0.4.0/unimap-linux $DEBUG_STD
     eval wget -N -c https://github.com/dwisiswant0/ppfuzz/releases/download/v1.0.1/ppfuzz-v1.0.1-x86_64-unknown-linux-musl.tar.gz $DEBUG_STD
@@ -340,26 +360,26 @@ eval $SUDO chmod 755 /usr/local/bin/unimap
 eval $SUDO strip -s /usr/local/bin/unimap $DEBUG_STD
 eval $SUDO chmod 755 /usr/local/bin/ppfuzz
 eval $SUDO strip -s /usr/local/bin/ppfuzz $DEBUG_STD
-eval $SUDO chmod +x $tools/degoogle_hunter/degoogle_hunter.sh
 eval notify $DEBUG_STD
 
 printf "${bblue}\n Running: Downloading required files ${reset}\n\n"
 ## Downloads
-eval wget -nc -O ~/.config/amass/config.ini https://raw.githubusercontent.com/OWASP/Amass/master/examples/config.ini $DEBUG_STD
-eval wget -nc -O ~/.gf/potential.json https://raw.githubusercontent.com/devanshbatham/ParamSpider/master/gf_profiles/potential.json $DEBUG_STD
-eval wget -nc -O ~/.config/notify/provider-config.yaml https://gist.githubusercontent.com/six2dez/23a996bca189a11e88251367e6583053/raw $DEBUG_STD
-eval wget -nc -O getjswords.py https://raw.githubusercontent.com/m4ll0k/Bug-Bounty-Toolz/master/getjswords.py $DEBUG_STD
-eval wget -nc -O subdomains_big.txt https://wordlists-cdn.assetnote.io/data/manual/best-dns-wordlist.txt $DEBUG_STD
-eval wget -O resolvers_trusted.txt https://raw.githubusercontent.com/trickest/resolvers/main/resolvers-trusted.txt $DEBUG_STD
-eval wget -O subdomains.txt https://gist.github.com/six2dez/a307a04a222fab5a57466c51e1569acf/raw $DEBUG_STD
-eval wget -O permutations_list.txt https://gist.github.com/six2dez/ffc2b14d283e8f8eff6ac83e20a3c4b4/raw $DEBUG_STD
-eval wget -nc -O fuzz_wordlist.txt https://raw.githubusercontent.com/six2dez/OneListForAll/main/onelistforallmicro.txt $DEBUG_STD
-eval wget -O lfi_wordlist.txt https://gist.githubusercontent.com/six2dez/a89a0c7861d49bb61a09822d272d5395/raw $DEBUG_STD
-eval wget -O ssti_wordlist.txt https://gist.githubusercontent.com/six2dez/ab5277b11da7369bf4e9db72b49ad3c1/raw $DEBUG_STD
-eval wget -O headers_inject.txt https://gist.github.com/six2dez/d62ab8f8ffd28e1c206d401081d977ae/raw $DEBUG_STD
-eval wget -O axiom_config.sh https://gist.githubusercontent.com/six2dez/6e2d9f4932fd38d84610eb851014b26e/raw $DEBUG_STD
-eval wget -O ~/nuclei-templates/extra_templates/ssrf.yaml https://raw.githubusercontent.com/NagliNagli/BountyTricks/main/ssrf.yaml $DEBUG_STD
-eval wget -O ~/nuclei-templates/extra_templates/sap-redirect.yaml https://raw.githubusercontent.com/NagliNagli/BountyTricks/main/sap-redirect.yaml $DEBUG_STD
+[ ! -f ~/.config/amass/config.ini ] && wget -q -O ~/.config/amass/config.ini https://raw.githubusercontent.com/OWASP/Amass/master/examples/config.ini
+[ ! -f ~/.config/notify/provider-config.yaml ] && wget -q -O ~/.config/notify/provider-config.yaml https://gist.githubusercontent.com/six2dez/23a996bca189a11e88251367e6583053/raw
+wget -q -O - https://raw.githubusercontent.com/devanshbatham/ParamSpider/master/gf_profiles/potential.json > ~/.gf/potential.json
+wget -q -O - https://raw.githubusercontent.com/m4ll0k/Bug-Bounty-Toolz/master/getjswords.py > ${tools}/getjswords.py
+wget -q -O - https://wordlists-cdn.assetnote.io/data/manual/best-dns-wordlist.txt > ${subs_wordlist_big}
+wget -q -O - https://raw.githubusercontent.com/trickest/resolvers/main/resolvers-trusted.txt > ${resolvers_trusted}
+wget -q -O - https://raw.githubusercontent.com/trickest/resolvers/main/resolvers.txt > ${resolvers} 
+wget -q -O - https://gist.github.com/six2dez/a307a04a222fab5a57466c51e1569acf/raw > ${subs_wordlist}
+wget -q -O - https://gist.github.com/six2dez/ffc2b14d283e8f8eff6ac83e20a3c4b4/raw > ${tools}/permutations_list.txt
+wget -q -O - https://raw.githubusercontent.com/six2dez/OneListForAll/main/onelistforallmicro.txt > ${fuzz_wordlist}
+wget -q -O - https://gist.githubusercontent.com/six2dez/a89a0c7861d49bb61a09822d272d5395/raw > ${lfi_wordlist}
+wget -q -O - https://gist.githubusercontent.com/six2dez/ab5277b11da7369bf4e9db72b49ad3c1/raw > ${ssti_wordlist}
+wget -q -O - https://gist.github.com/six2dez/d62ab8f8ffd28e1c206d401081d977ae/raw > ${tools}/headers_inject.txt
+wget -q -O - https://gist.githubusercontent.com/six2dez/6e2d9f4932fd38d84610eb851014b26e/raw > ${tools}/axiom_config.sh
+wget -q -O - https://raw.githubusercontent.com/NagliNagli/BountyTricks/main/ssrf.yaml > ~/nuclei-templates/extra_templates/ssrf.yaml
+wget -q -O - https://raw.githubusercontent.com/NagliNagli/BountyTricks/main/sap-redirect.yaml > ~/nuclei-templates/extra_templates/sap-redirect.yaml
 eval $SUDO chmod +x $tools/axiom_config.sh
 
 ## Last check
@@ -418,14 +438,16 @@ if [ "$generate_resolvers" = true ]; then
 		dnsvalidator -tL https://raw.githubusercontent.com/blechschmidt/massdns/master/lists/resolvers.txt -threads $DNSVALIDATOR_THREADS -o tmp_resolvers &>/dev/null
 		[ -s "tmp_resolvers" ] && cat tmp_resolvers | anew -q $resolvers
 		[ -s "tmp_resolvers" ] && rm -f tmp_resolvers &>/dev/null
-		[ ! -s "$resolvers" ] && wget -q https://raw.githubusercontent.com/trickest/resolvers/main/resolvers.txt -O $resolvers &>/dev/null
+		[ ! -s "$resolvers" ] && wget -q -O - https://raw.githubusercontent.com/trickest/resolvers/main/resolvers.txt > $resolvers &>/dev/null
+        [ ! -s "$resolvers_trusted" ] && wget -q -O - https://raw.githubusercontent.com/trickest/resolvers/main/resolvers-trusted.txt > $resolvers_trusted &>/dev/null
 		printf "${yellow} Resolvers updated\n ${reset}\n\n"
 	fi
 	generate_resolvers=false
 else
 	[ ! -s "$resolvers" ] || if [[ $(find "$resolvers" -mtime +1 -print) ]] ; then
 		 ${reset}"\n\nChecking resolvers lists...\n Accurate resolvers are the key to great results\n Downloading new resolvers ${reset}\n\n"
-		wget -q https://raw.githubusercontent.com/trickest/resolvers/main/resolvers.txt -O $resolvers &>/dev/null
+		wget -q -O - https://raw.githubusercontent.com/trickest/resolvers/main/resolvers.txt > $resolvers &>/dev/null
+        wget -q -O - https://raw.githubusercontent.com/trickest/resolvers/main/resolvers-trusted.txt > $resolvers_trusted &>/dev/null
 		printf "${yellow} Resolvers updated\n ${reset}\n\n"
 	fi
 fi
